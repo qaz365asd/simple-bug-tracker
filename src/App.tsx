@@ -1,8 +1,10 @@
 import React from 'react';
+import Personal from './Personal';
 
-function App() {
+const App = () => {
   return (
     <div className="App">
+      <Personal />
     </div>
   );
 }
