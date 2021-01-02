@@ -4,26 +4,36 @@ import { makeStyles } from '@material-ui/core/styles';
 const useStyles = makeStyles((theme) => ({
     root: {
         border: 'solid',
-        backgroundColor: 'grey',
+        backgroundColor: 'blue',
         margin: '2px',
         padding: '2px',
     }
 }));
 
-type Props = {
-
+type KanbanItemProps = {
+    id: string;
+    title: string;
+    description: string;
+    dropFunction: Function;
 }
 
-const KanbanItem: React.FC<Props> = () => {
+const dragStart = (event: React.DragEvent<HTMLDivElement>) => {
+    event.dataTransfer.setData("text", (event.target as HTMLDivElement).id);
+}
+
+const KanbanItem: React.FC<KanbanItemProps> = ({ id, title, description, dropFunction}) => {
 
     const classes = useStyles();
 
     return (
-    <div className={classes.root}>
-        <h2>Card Title Here</h2>
-        <p>card description here</p>
-    </div>
+        <div
+            id={id}
+            className={classes.root}
+            draggable="true"
+            onDragStart={(event) => dragStart(event)}>
+            <h2>{title}</h2>
+            <p>{description}</p>
+        </div>
     );
 }
-
 export default KanbanItem;
