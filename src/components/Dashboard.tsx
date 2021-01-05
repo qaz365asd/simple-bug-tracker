@@ -42,18 +42,22 @@ const mapToArray = (map: Map<string, Data[]>) => {
     return newArray
 }
 
-const createCard = (title: string, description: string) => {
-
-}
-
-const createList = (listTitle: string) => {
-
+const handleListInputChange = (event: React.ChangeEvent<HTMLInputElement>, setListInput: React.Dispatch<React.SetStateAction<string>>) => {
+    setListInput(event.target.value);
 }
 
 const Dashboard: React.FC = () => {
     //const [lists, setLists] = useState(tempLists);
     const [data, setData] = useState(tempData);
     const classes = useStyles();
+    const [listInput, setListInput] = useState("");
+
+    const createList = () => {
+        const newData = new Map(data);
+        newData.set(listInput, []);
+        setListInput("");
+        setData(newData);
+    }
 
     const dragSortableCategory = useCallback((dragIndex: number, dragCategory: string, targetIndex: number, targetCategory: string) => {
 
@@ -63,13 +67,13 @@ const Dashboard: React.FC = () => {
         if (dragCategoryArray !== undefined && targetCategoryArray !== undefined) {
             const dragItem = dragCategoryArray[dragIndex]
             dragCategoryArray.splice(dragIndex, 1);
-            for (let i = dragIndex; i < dragCategoryArray.length; i++){
-                dragCategoryArray.splice(i, 1, {...dragCategoryArray[i], index: dragCategoryArray[i].index - 1})
+            for (let i = dragIndex; i < dragCategoryArray.length; i++) {
+                dragCategoryArray.splice(i, 1, { ...dragCategoryArray[i], index: dragCategoryArray[i].index - 1 })
             }
-            for (let i = targetIndex; i < targetCategoryArray.length; i++){
-                targetCategoryArray.splice(i, 1, {...targetCategoryArray[i], index: i + 1})
+            for (let i = targetIndex; i < targetCategoryArray.length; i++) {
+                targetCategoryArray.splice(i, 1, { ...targetCategoryArray[i], index: i + 1 })
             }
-            targetCategoryArray.splice(targetIndex, 0, {...dragItem, category: targetCategory, index: targetIndex});
+            targetCategoryArray.splice(targetIndex, 0, { ...dragItem, category: targetCategory, index: targetIndex });
             setData(newData);
         } else {
             return data;
@@ -81,7 +85,14 @@ const Dashboard: React.FC = () => {
         <DndProvider backend={HTML5Backend}>
             <Grid container>
                 {mapToArray(data).map(list => <KanbanList listTitle={list.key} items={list.value} dragSortableCategory={dragSortableCategory} setData={setData} data={data} />)}
-                <button type="button">Create a new list!</button>
+                <div>
+                    <label>
+                        List Title:
+                    <br />
+                        <input type="text" value={listInput} onChange={(event) => handleListInputChange(event, setListInput)} />
+                    </label>
+                    <button type="button" onClick={createList}>Create a new list!</button>
+                </div>
             </Grid>
         </DndProvider>
     );

@@ -31,10 +31,22 @@ type KanbanListProps = {
     data: Map<string, Data[]>
 }
 
+const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>, setInput: React.Dispatch<React.SetStateAction<{
+    title: string;
+    description: string;
+}>>) => {
+    if (event.target.name === "title") {
+        setInput((prevState) => ({ ...prevState, title: event.target.value }));
+    } else {
+        setInput((prevState) => ({ ...prevState, description: event.target.value }));
+    }
+}
+
 const KanbanList: React.FC<KanbanListProps> = ({ listTitle, items, dragSortableCategory, setData, data }) => {
     const ref = useRef<HTMLDivElement>(null);
+    const [input, setInput] = useState({ title: "", description: "" });
     const classes = useStyles();
-    
+
     const [, drop] = useDrop({
         accept: ItemTypes.KANBANITEM,
         hover: (item, monitor) => {
@@ -49,6 +61,24 @@ const KanbanList: React.FC<KanbanListProps> = ({ listTitle, items, dragSortableC
         }
     })
 
+    const createCard = () => {
+        //TODO: Createcard id is incorrect and should be fixed later
+        const newData = new Map(data);
+        const newArray = newData.get(listTitle);
+        if (newArray !== undefined) {
+            newArray.push({
+                category: listTitle,
+                index: newArray.length,
+                id: "5",
+                title: input.title,
+                description: input.description,
+            })
+            setInput({title: "", description: ""})
+        }
+        console.log(newData);
+        setData(newData);
+    }
+
     const dragSortableList = useCallback((dragIndex: number, targetIndex: number, currDragDivBound: DOMRect, offSet: XYCoord) => {
 
         //TODO: Consider making drag and drop more sophisicated: 1. Items push up and down accordingly respective to the elements (50% of width) 
@@ -56,7 +86,7 @@ const KanbanList: React.FC<KanbanListProps> = ({ listTitle, items, dragSortableC
 
         const oldArray = newData.get(listTitle);
         const newArray = newData.get(listTitle);
-        const itemHeight = currDragDivBound.height
+        const itemHeight = currDragDivBound.height;
 
         if (newArray !== undefined && oldArray !== undefined) {
             if (dragIndex === targetIndex) {
@@ -64,8 +94,8 @@ const KanbanList: React.FC<KanbanListProps> = ({ listTitle, items, dragSortableC
             } else {
                 const prevItem = oldArray[targetIndex];
                 const newItem = oldArray[dragIndex];
-                newArray.splice(targetIndex, 1, {...newItem, index: targetIndex});
-                newArray.splice(dragIndex, 1, {...prevItem, index: dragIndex});
+                newArray.splice(targetIndex, 1, { ...newItem, index: targetIndex });
+                newArray.splice(dragIndex, 1, { ...prevItem, index: dragIndex });
                 setData(newData);
             }
         }
@@ -78,10 +108,19 @@ const KanbanList: React.FC<KanbanListProps> = ({ listTitle, items, dragSortableC
             <div ref={ref} id={listTitle} className={classes.root}>
                 <h1>{listTitle}</h1>
                 <List>
-                    {items.map(({ category, id, title, description, index }) => <KanbanItem category={category} id={id} title={title} description={description} index={index} dragSortableList={dragSortableList} dragSortableCategory={dragSortableCategory}/>)}
+                    {items.map(({ category, id, title, description, index }) => <KanbanItem category={category} id={id} title={title} description={description} index={index} dragSortableList={dragSortableList} dragSortableCategory={dragSortableCategory} />)}
                 </List>
-                <input type="text"/>
-                <button type="button">Create a new card!</button>
+                <label>
+                    Title:
+                <br />
+                    <input name="title" type="text" value={input.title} onChange={(event) => handleInputChange(event, setInput)} />
+                </label>
+                <label>
+                    Description:
+                <br />
+                    <input name="description" type="text" value={input.description} onChange={(event) => handleInputChange(event, setInput)} />
+                </label>
+                <button type="button" onClick={createCard}>Create a new card!</button>
             </div>
         </Grid>
     );

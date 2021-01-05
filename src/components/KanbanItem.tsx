@@ -43,8 +43,8 @@ const KanbanItem: React.FC<KanbanItemProps> = ({ id, category, title, descriptio
             
             const currDragDivBound = ref.current?.getBoundingClientRect();
             const offSet = monitor.getClientOffset();
-            console.log(currDragDivBound)
-            console.log(offSet);
+            //console.log(currDragDivBound)
+            //console.log(offSet);
 
             if (monitor.getItem().category === category && offSet !== null && currDragDivBound !== undefined) {
                 const dragIndex = monitor.getItem().index;
