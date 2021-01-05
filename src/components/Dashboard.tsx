@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Grid from '@material-ui/core/Grid'
 import { makeStyles } from '@material-ui/core/styles';
 import KanbanList from "./KanbanList";
@@ -6,14 +6,9 @@ import KanbanItem from "./KanbanItem";
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend'
 
-/*
-const tempLists = ["todo", "backlog"]
-const tempData = [{ category: "todo", id: "1", title: "title1", description: "des1" }, { category: "todo", id: "2", title: "title2", description: "des2" }, { category: "backlog", id: "3", title: "backlogttl1", description: "backlogdes1" }];
-*/
-
 const tempData = new Map([
-    ["todo", [{ category: "todo", id: "1", title: "title1", description: "des1" }, { category: "todo", id: "2", title: "title2", description: "des2" }]],
-    ["backlog", [{ category: "backlog", id: "3", title: "backlogttl1", description: "backlogdes1" }]]
+    ["todo", [{ category: "todo", index: 0, id: "1", title: "title1", description: "des1" }, { category: "todo", index: 1, id: "2", title: "title2", description: "des2" }, { category: "todo", index: 2, id: "4", title: "title3", description: "des3" }]],
+    ["backlog", [{ category: "backlog", index: 0, id: "3", title: "backlogttl1", description: "backlogdes1" }]]
 ])
 
 const useStyles = makeStyles((theme) => ({
@@ -25,29 +20,10 @@ const useStyles = makeStyles((theme) => ({
 
 type Data = {
     category: string;
+    index: number;
     id: string;
     title: string;
     description: string;
-}
-
-const drop = (setData: React.Dispatch<React.SetStateAction<Map<string, Data[]>>>, data: Map<string, Data[]>, dragId: string, dragCategory: string, targetCategory: string) => {
-    //TODO: Consider making drag and drop more sophisicated: 1. elements disappear on dragStart; 2. div box changes size accordingly; 3. able to rearrange element orders accordingly
-    const newData = new Map(data);
-    const oldData = dataProcesser(data.get(dragCategory)).find(data => data.id === dragId);
-    if (oldData !== undefined && data.has(targetCategory)) {
-        const newArrayInOldCategory = dataProcesser(data.get(dragCategory)).filter(item => item.id !== dragId);
-        newData.set(dragCategory, newArrayInOldCategory);
-        const newArrayInNewCategory = [...dataProcesser(newData.get(targetCategory)), {
-            category: targetCategory,
-            id: oldData.id,
-            title: oldData.title,
-            description: oldData.description
-        }]
-        newData.set(targetCategory, newArrayInNewCategory);
-        setData(newData);
-    } else {
-        return data;
-    }
 }
 
 const dataProcesser = (list: Data[] | undefined) => {
@@ -71,7 +47,7 @@ const createCard = (title: string, description: string) => {
 }
 
 const createList = (listTitle: string) => {
-    
+
 }
 
 const Dashboard: React.FC = () => {
@@ -79,12 +55,34 @@ const Dashboard: React.FC = () => {
     const [data, setData] = useState(tempData);
     const classes = useStyles();
 
+    const dragSortableCategory = useCallback((dragIndex: number, dragCategory: string, targetIndex: number, targetCategory: string) => {
+
+        const newData = new Map(data);
+        const dragCategoryArray = newData.get(dragCategory);
+        const targetCategoryArray = newData.get(targetCategory);
+        if (dragCategoryArray !== undefined && targetCategoryArray !== undefined) {
+            const dragItem = dragCategoryArray[dragIndex]
+            dragCategoryArray.splice(dragIndex, 1);
+            for (let i = dragIndex; i < dragCategoryArray.length; i++){
+                dragCategoryArray.splice(i, 1, {...dragCategoryArray[i], index: dragCategoryArray[i].index - 1})
+            }
+            for (let i = targetIndex; i < targetCategoryArray.length; i++){
+                targetCategoryArray.splice(i, 1, {...targetCategoryArray[i], index: i + 1})
+            }
+            targetCategoryArray.splice(targetIndex, 0, {...dragItem, category: targetCategory, index: targetIndex});
+            setData(newData);
+        } else {
+            return data;
+        }
+
+    }, [data])
+
     return (
         <DndProvider backend={HTML5Backend}>
-        <Grid container>
-            {mapToArray(data).map(list => <KanbanList listTitle={list.key} items={list.value} dropFunction={drop} setData={setData} data={data} />)}
-            <button type="button">Create a new list!</button>
-        </Grid>
+            <Grid container>
+                {mapToArray(data).map(list => <KanbanList listTitle={list.key} items={list.value} dragSortableCategory={dragSortableCategory} setData={setData} data={data} />)}
+                <button type="button">Create a new list!</button>
+            </Grid>
         </DndProvider>
     );
 };
